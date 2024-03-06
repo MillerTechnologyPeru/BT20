@@ -50,10 +50,22 @@ final class TopdonTests: XCTestCase {
             .batteryService
         ])
         XCTAssertNil(advertisementData.manufacturerData)
+        
+        guard let advertisement = BT20.Advertisement(advertisementData) else {
+            XCTFail()
+            return
+        }
+        
+        XCTAssertEqual(advertisement.address.rawValue, "78:5E:E8:91:80:14")
     }
     #endif
     
     func testBT20VoltageLevel() throws {
+        
+        let data = Data([0x55, 0xAA, 0x00, 0x0F, 0xFF, 0xF0, 0xDD, 0x03, 0x65, 0xE8, 0x32, 0xAC, 0x30, 0xE6, 0x00, 0x00, 0x1B])
+        
+        
+        
         
     }
 }
