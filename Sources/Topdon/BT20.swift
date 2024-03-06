@@ -9,13 +9,13 @@ import Foundation
 import Bluetooth
 import GATT
 
-public struct BT20 {
+public enum BT20 {
     
-    struct Advertisement: Equatable, Hashable, Sendable {
+    public struct Advertisement: Equatable, Hashable, Sendable {
         
         public static var name: String { "BT20" }
         
-        public static var services: [BluetoothUUID] {
+        public static var services: Set<BluetoothUUID> {
             [
                 .humanInterfaceDevice,
                 .batteryService
@@ -26,6 +26,13 @@ public struct BT20 {
     }
 }
 
+extension BT20.Advertisement: Identifiable {
+    
+    public var id: BluetoothAddress {
+        address
+    }
+}
+
 extension BT20.Advertisement {
     
     init?<T: AdvertisementData>(_ advertisement: T) {
@@ -33,7 +40,7 @@ extension BT20.Advertisement {
               Self.name == localName, 
               let serviceUUIDs = advertisement.serviceUUIDs,
               serviceUUIDs.count == 5, 
-              serviceUUIDs.suffix(2) == Self.services else {
+              Set(serviceUUIDs.suffix(2)) == Self.services else {
             return nil
         }
         let macBytes = serviceUUIDs.prefix(3).compactMap {
