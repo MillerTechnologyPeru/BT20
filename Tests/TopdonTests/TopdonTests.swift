@@ -64,8 +64,13 @@ final class TopdonTests: XCTestCase {
         
         let data = Data([0x55, 0xAA, 0x00, 0x0F, 0xFF, 0xF0, 0xDD, 0x03, 0x65, 0xE8, 0x32, 0xAC, 0x30, 0xE6, 0x00, 0x00, 0x1B])
         
+        guard let notification = BT20.BatteryVoltageNotification(data: data) else {
+            XCTFail()
+            return
+        }
         
-        
-        
+        XCTAssertEqual(notification.timestamp, 0x32AC)
+        XCTAssertEqual(notification.voltage, 12518)
+        XCTAssertEqual(Float(notification.voltage) / 1000, 12.518)
     }
 }
