@@ -32,7 +32,8 @@ extension BT20.Advertisement {
         guard let localName = advertisement.localName,
               Self.name == localName, 
               let serviceUUIDs = advertisement.serviceUUIDs,
-              serviceUUIDs.count == 5, serviceUUIDs.suffix(2) == Self.services else {
+              serviceUUIDs.count == 5, 
+              serviceUUIDs.suffix(2) == Self.services else {
             return nil
         }
         let macBytes = serviceUUIDs.prefix(3).compactMap {
@@ -71,12 +72,11 @@ public extension BT20 {
         let voltage: UInt16
         
         init?(data: Data) {
-            guard data.count >= 17, Data(data.prefix(11)) == BT20.Notification.batteryVoltagePrefix.data else {
+            guard data.count >= 17, Data(data.prefix(10)) == BT20.Notification.batteryVoltagePrefix.data else {
                 return nil
             }
-            let suffix = Data(data.suffix(from: 12))
-            self.timestamp = 0
-            self.voltage = 0
+            self.timestamp = UInt16(bigEndian: UInt16(bytes: (data[10], data[11])))
+            self.voltage = UInt16(bigEndian: UInt16(bytes: (data[12], data[13])))
         }
     }
 }
