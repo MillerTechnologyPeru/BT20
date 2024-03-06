@@ -37,13 +37,17 @@ extension BT20.Advertisement {
     
     init?<T: AdvertisementData>(_ advertisement: T) {
         guard let localName = advertisement.localName,
-              Self.name == localName, 
-              let serviceUUIDs = advertisement.serviceUUIDs,
-              serviceUUIDs.count == 5, 
-              Set(serviceUUIDs.suffix(2)) == Self.services else {
+              Self.name == localName else {
             return nil
         }
-        let macBytes = serviceUUIDs.prefix(3).compactMap {
+        guard let serviceUUIDs = advertisement.serviceUUIDs,
+              serviceUUIDs.count == 5,
+              Set(serviceUUIDs.prefix(2)) == Self.services else {
+            return nil
+        }
+        let macBytes = serviceUUIDs
+            .suffix(3)
+            .compactMap {
             switch $0 {
             case let .bit16(value):
                 return value
