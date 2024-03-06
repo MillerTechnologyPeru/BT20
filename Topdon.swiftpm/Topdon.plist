@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BT20</key>
+	<dict>
+		<key>symbol</key>
+		<string>minus.plus.batteryblock</string>
+		<key>image</key>
+		<string>https://www.topdon.us/cdn/shop/products/BT20-1_2000x.jpg</string>
+		<key>thumbnail</key>
+		<string>https://cdn.shopify.com/s/files/1/0590/5789/7634/files/BT20.png</string>
+		<key>manual</key>
+		<string>https://cdn.shopify.com/s/files/1/0073/5697/3144/files/BT20_User_Manual.pdf</string>
+		<key>website</key>
+		<string>https://www.topdon.com/products/BT20</string>
+	</dict>
+</dict>
+</plist>
