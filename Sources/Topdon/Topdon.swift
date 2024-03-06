@@ -3,9 +3,9 @@ import Bluetooth
 import GATT
 
 /// Topdon Bluetooth Accessory
-public enum TopdonAccessory: String, Equatable, Hashable, Sendable {
+public enum TopdonAccessory: String, Equatable, Hashable, Sendable, Codable {
     
-    case bt20
+    case bt20 = "BT20"
 }
 
 public extension TopdonAccessory {
