@@ -13,12 +13,10 @@ import Topdon
 
 struct TopdonAccessoryDetailView: View {
     
-    let peripheral: NativePeripheral
+    let id: TopdonAccessory.Advertisement.ID
     
-    let advertisement: TopdonAccessory.Advertisement
-        
     @EnvironmentObject
-    private var store: Store
+    private var store: AccessoryManager
     
     @State
     private var reloadTask: Task<Void, Never>?
@@ -29,28 +27,114 @@ struct TopdonAccessoryDetailView: View {
     @State
     private var isReloading = false
     
+    @State
+    private var information: Result<TopdonAccessoryInfo, Error>?
+    
     init(
-        peripheral: NativePeripheral,
-        advertisement: TopdonAccessory.Advertisement
+        id: TopdonAccessory.Advertisement.ID
     ) {
-        self.peripheral = peripheral
-        self.advertisement = advertisement
+        self.id = id
     }
     
     var body: some View {
-        Text("\(advertisement.name)")
+        VStack {
+            if let advertisement {
+                StateView(
+                    advertisement: advertisement,
+                    information: information
+                )
+            } else {
+                Text("Accessory \(id.rawValue) not in range")
+                    .navigationTitle("\(id.rawValue)")
+            }
+        }
         .refreshable {
-            //reload()
+            reload()
         }
         .onAppear {
-            //reload()
+            reload()
         }
         .onDisappear {
             reloadTask?.cancel()
         }
-        .navigationTitle("\(advertisement.name)")
     }
 }
+
+extension TopdonAccessoryDetailView {
+    
+    func reload() {
+        
+    }
+    
+    var advertisement: TopdonAccessory.Advertisement? {
+        store.peripherals.values.first(where: { $0.address == self.id })
+    }
+}
+
+extension TopdonAccessoryDetailView {
+    
+    struct StateView: View {
+        
+        let advertisement: TopdonAccessory.Advertisement
+        
+        let information: Result<TopdonAccessoryInfo, Error>?
+        
+        var body: some View {
+            ScrollView {
+                VStack(spacing: 16) {
+                    // image view
+                    VStack {
+                        switch information {
+                        case .success(let success):
+                            CachedAsyncImage(
+                                url: success.image,
+                                content: { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                }, placeholder: {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                })
+                        case .failure(let failure):
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.yellow)
+                            Text(verbatim: failure.localizedDescription)
+                        case nil:
+                            ProgressView()
+                                .progressViewStyle(.circular)
+                        }
+                    }
+                    .frame(height: 250)
+                    .padding()
+                    
+                    // MAC Address
+                    Text(verbatim: advertisement.address.rawValue)
+                    
+                    // Actions
+                    switch advertisement.type {
+                    case .bt20:
+                        Button("Start Logging") {
+                            
+                        }
+                    }
+                    
+                    // Links
+                    if let information = try? information?.get() {
+                        if let manual = information.manual {
+                            Link("User Manual", destination: manual)
+                        }
+                        if let website = information.website {
+                            Link("Product Page", destination: website)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("\(advertisement.name)")
+        }
+    }
+}
+
 /*
 extension TopdonDetailView {
     
