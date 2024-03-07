@@ -28,8 +28,12 @@ public final class AccessoryManager: ObservableObject {
     @Published
     public internal(set) var peripherals = [NativeCentral.Peripheral: TopdonAccessory.Advertisement]()
     
+    public var connections: Set<NativeCentral.Peripheral> {
+        Set(connectionsByPeripherals.keys)
+    }
+    
     @Published
-    public internal(set) var connections = Set<NativeCentral.Peripheral>()
+    internal var connectionsByPeripherals = [NativeCentral.Peripheral: GATTConnection<NativeCentral>]()
     
     internal lazy var central = NativeCentral()
     
