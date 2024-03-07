@@ -87,7 +87,7 @@ extension TopdonAccessoryDetailView {
                         switch information {
                         case .success(let success):
                             CachedAsyncImage(
-                                url: success.image,
+                                url: URL(string: success.image),
                                 content: { image in
                                     image
                                         .resizable()
@@ -121,10 +121,10 @@ extension TopdonAccessoryDetailView {
                     
                     // Links
                     if let information = try? information?.get() {
-                        if let manual = information.manual {
+                        if let manual = information.manual.flatMap({ URL(string: $0) }) {
                             Link("User Manual", destination: manual)
                         }
-                        if let website = information.website {
+                        if let website = information.website.flatMap({ URL(string: $0) }) {
                             Link("Product Page", destination: website)
                         }
                     }

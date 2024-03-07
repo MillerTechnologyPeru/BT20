@@ -18,20 +18,23 @@ public extension AccessoryManager {
                 return cache
             } else {
                 // attempt to read cache in background.
-                Task(priority: .userInitiated) {
-                    do { try readAccessoryInfoFile() }
-                    catch CocoaError.fileReadNoSuchFile {
-                        // download if no file.
-                        do { try await downloadAccessoryInfo() }
-                        catch URLError.notConnectedToInternet {
-                            // cannot download
+                if fileManagerCache.accessoryInfoReadTask == nil {
+                    fileManagerCache.accessoryInfoReadTask = Task(priority: .userInitiated) {
+                        do { try readAccessoryInfoFile() }
+                        catch CocoaError.fileReadNoSuchFile {
+                            log("Accessory information file not found, will attempt download.")
+                            // download if no file.
+                            do { try await downloadAccessoryInfo() }
+                            catch URLError.notConnectedToInternet {
+                                // cannot download
+                            }
+                            catch {
+                                log("Unable to download accessory info. \(error)")
+                            }
                         }
                         catch {
-                            log("Unable to download accessory info. \(error)")
+                            log("Unable to read accessory info. \(error)")
                         }
-                    }
-                    catch {
-                        log("Unable to read accessory info. \(error)")
                     }
                 }
                 return nil
@@ -61,9 +64,7 @@ internal extension AccessoryManager {
     }
     
     func saveAccessoryInfoFile(_ value: TopdonAccessoryInfo.Database) throws {
-        let encoder = PropertyListEncoder()
-        encoder.outputFormat = .xml
-        let data = try encoder.encode(value)
+        let data = try value.encodePropertyList()
         try data.write(to: accessoryInfoFileURL, options: [.atomic])
         // cache value
         if fileManagerCache.accessoryInfo != value {
@@ -89,6 +90,8 @@ internal extension AccessoryManager {
     struct FileManagerCache {
         
         var accessoryInfo: TopdonAccessoryInfo.Database?
+        
+        var accessoryInfoReadTask: Task<Void, Never>?
     }
     
     enum FileName: String {
