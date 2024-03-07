@@ -76,24 +76,6 @@ extension BT20.Advertisement {
 
 public extension BT20 {
     
-    struct BatteryVoltageNotification: Equatable, Hashable, Sendable {
-        
-        let timestamp: UInt16
-        
-        let voltage: UInt16
-        
-        init?(data: Data) {
-            guard data.count >= 17, Data(data.prefix(10)) == BT20.Notification.batteryVoltagePrefix.data else {
-                return nil
-            }
-            self.timestamp = UInt16(bigEndian: UInt16(bytes: (data[10], data[11])))
-            self.voltage = UInt16(bigEndian: UInt16(bytes: (data[12], data[13])))
-        }
-    }
-}
-
-internal extension BT20 {
-    
     enum Command: String, DataConstant {
         
         case version = "55AA0007FFF8DD09D4"
@@ -112,13 +94,12 @@ internal extension BT20 {
         
         case batteryVoltagePrefix = "55AA000FFFF0DD0365E8"
         
-        
     }
 }
 
-protocol DataConstant: RawRepresentable where RawValue == String { }
+public protocol DataConstant: RawRepresentable where RawValue == String { }
 
-extension DataConstant {
+public extension DataConstant {
     
     var data: Data {
         guard let data = Data(hexadecimal: rawValue) else {
