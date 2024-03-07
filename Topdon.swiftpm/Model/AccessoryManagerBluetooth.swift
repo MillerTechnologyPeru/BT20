@@ -59,17 +59,32 @@ public extension AccessoryManager {
         scanStream = nil
     }
     
-    func connect(to accessory: TopdonAccessory.Advertisement.ID) async throws {
+    func connect(to accessory: TopdonAccessory.Advertisement.ID) async throws -> GATTConnection<NativeCentral> {
+        let central = self.central
         guard let peripheral = self[peripheral: accessory] else {
             throw CentralError.unknownPeripheral
         }
-        // already connected
-        guard await loadConnections.contains(peripheral) == false else {
-            return
+        if let connection = self.connectionsByPeripherals[peripheral] {
+            return connection
         }
-        // initiate connection
-        let central = self.central
-        try await central.connect(to: peripheral)
+        // connect
+        if await loadConnections.contains(peripheral) == false {
+            // initiate connection
+            try await central.connect(to: peripheral)
+        }
+        // cache MTU
+        let maximumTransmissionUnit = try await central.maximumTransmissionUnit(for: peripheral)
+        // get characteristics by UUID
+        let servicesCache = try await central.cacheServices(for: peripheral)
+        let connectionCache = GATTConnection(
+            central: central,
+            peripheral: peripheral,
+            maximumTransmissionUnit: maximumTransmissionUnit,
+            cache: servicesCache
+        )
+        // store connection cache
+        self.connectionsByPeripherals[peripheral] = connectionCache
+        return connectionCache
     }
     
     func disconnect(_ accessory: TopdonAccessory.Advertisement.ID) async {
@@ -77,7 +92,59 @@ public extension AccessoryManager {
             assertionFailure()
             return
         }
+        // stop notifications
         await central.disconnect(peripheral)
+    }
+    
+    /// Read Voltage
+    func readVoltage(
+        for accessory: TopdonAccessory.Advertisement.ID
+    ) async throws -> AsyncThrowingStream<Topdon.BatteryVoltageNotification, Error> {
+        guard let peripheral = self[peripheral: accessory] else {
+            throw CentralError.unknownPeripheral
+        }
+        let connection = try await connect(to: accessory)
+        let notifications = try await notifications(for: connection)
+        try await writeCommand(BT20.Command.loggingIntervalDay.data, for: connection)
+        var iterator = notifications.makeAsyncIterator()
+        return AsyncStream(unfolding: {
+            iterator
+                .next()
+                .flatMap { BatteryVoltageNotification(data: $0) }
+        }, onCancel: {
+            notifications.stop()
+        })
+    }
+}
+
+internal extension AccessoryManager {
+    
+    func writeCommand(_ data: Data, for connection: GATTConnection<NativeCentral>) async throws {
+        try await connection.writeTopdonCommand(data)
+    }
+    
+    func notifications(for connection: GATTConnection<NativeCentral>) async throws -> AsyncCentralNotifications<NativeCentral> {
+        guard let characteristic = connection.cache.characteristic(.topdonService, service: .topdonNotificationCharacteristic) else {
+            throw TopdonAppError.characteristicNotFound(.topdonNotificationCharacteristic)
+        }
+        return try await connection.central.notify(for: characteristic)
+    }
+}
+
+internal extension GATTConnection {
+    
+    func writeTopdonCommand(_ data: Data) async throws {
+        guard let characteristic = cache.characteristic(.topdonService, service: .topdonCommandCharacteristic) else {
+            throw TopdonAppError.characteristicNotFound(.topdonCommandCharacteristic)
+        }
+        try await central.writeValue(data, for: characteristic, withResponse: false)
+    }
+    
+    func topdonNotifications() async throws -> AsyncCentralNotifications<Central> {
+        guard let characteristic = cache.characteristic(.topdonService, service: .topdonNotificationCharacteristic) else {
+            throw TopdonAppError.characteristicNotFound(.topdonNotificationCharacteristic)
+        }
+        return try await central.notify(for: characteristic)
     }
 }
 
@@ -100,8 +167,13 @@ internal extension AccessoryManager {
             while let self = self {
                 let newState = await self.loadConnections
                 let oldValue = self.connections
-                if newState != oldValue {
-                    self.connections = newState
+                let disconnected = self.connectionsByPeripherals
+                    .filter { newState.contains($0.value.peripheral) }
+                    .keys
+                if newState != oldValue, disconnected.isEmpty == false {
+                    for peripheral in disconnected {
+                        self.connectionsByPeripherals[peripheral] = nil
+                    }
                 }
                 try await Task.sleep(timeInterval: 0.2)
             }
