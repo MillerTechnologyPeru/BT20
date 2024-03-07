@@ -39,7 +39,7 @@ internal extension TopdonAdvertisementRow {
                 VStack {
                     if let information {
                         CachedAsyncImage(
-                            url: URL(string: information.thumbnail),
+                            url: URL(string: information.image),
                             content: { image in
                                 image
                                     .resizable()

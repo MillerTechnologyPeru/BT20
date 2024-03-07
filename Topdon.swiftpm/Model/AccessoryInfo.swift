@@ -16,9 +16,7 @@ public struct TopdonAccessoryInfo: Equatable, Hashable, Codable, Sendable {
     public let symbol: String
     
     public let image: String
-    
-    public let thumbnail: String
-    
+        
     public let manual: String?
         
     public let website: String?

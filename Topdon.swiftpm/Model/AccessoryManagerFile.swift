@@ -70,11 +70,13 @@ internal extension AccessoryManager {
         if fileManagerCache.accessoryInfo != value {
             fileManagerCache.accessoryInfo = value
         }
+        log("Wrote file \(accessoryInfoFileURL.path)")
     }
     
     @discardableResult
     func readAccessoryInfoFile() throws -> TopdonAccessoryInfo.Database {
         let data = try Data(contentsOf: accessoryInfoFileURL, options: [.mappedIfSafe])
+        log("Read file \(accessoryInfoFileURL.path)")
         let decoder = PropertyListDecoder()
         let value = try decoder.decode(TopdonAccessoryInfo.Database.self, from: data)
         // cache value
