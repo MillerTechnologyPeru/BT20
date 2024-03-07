@@ -14,7 +14,7 @@ import Topdon
 struct NearbyDevicesView: View {
     
     @EnvironmentObject
-    var store: Store
+    var store: AccessoryManager
     
     @State
     private var scanTask: Task<Void, Never>?
@@ -111,8 +111,7 @@ private extension NearbyDevicesView {
             ForEach(items) { item in
                 NavigationLink(destination: {
                     TopdonAccessoryDetailView(
-                        peripheral: item.peripheral,
-                        advertisement: item.advertisement
+                        id: item.advertisement.id
                     )
                 }, label: {
                     TopdonAdvertisementRow(

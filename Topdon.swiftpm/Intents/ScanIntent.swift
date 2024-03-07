@@ -8,6 +8,9 @@
 import Foundation
 import AppIntents
 import SwiftUI
+import Bluetooth
+import GATT
+import DarwinGATT
 import Topdon
 
 @available(iOS 16, *)
@@ -36,7 +39,7 @@ struct ScanIntent: AppIntent {
     
     @MainActor
     func perform() async throws -> some IntentResult {
-        let store = Store.shared
+        let store = AccessoryManager.shared
         try await store.central.wait(for: .poweredOn, warning: 2, timeout: 5)
         try await store.scan(duration: duration)
         let advertisements = store.peripherals.map { $0.value }
