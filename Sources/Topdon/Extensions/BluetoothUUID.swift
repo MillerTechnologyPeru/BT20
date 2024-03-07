@@ -10,6 +10,10 @@ import Bluetooth
 
 public extension BluetoothUUID {
     
+    static var topdonService: BluetoothUUID {
+        BluetoothUUID(rawValue: "00010203-0405-0607-0809-0A0B0C0D1910")!
+    }
+    
     static var topdonNotificationCharacteristic: BluetoothUUID {
         BluetoothUUID(rawValue: "00010203-0405-0607-0809-0A0B0C0D2B10")!
     }
