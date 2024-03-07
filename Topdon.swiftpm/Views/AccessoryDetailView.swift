@@ -80,7 +80,7 @@ extension TopdonAccessoryDetailView {
             fetchAccessoryInfo()
         }
         // Bluetooth
-        
+        connect()
     }
     
     func fetchAccessoryInfo() {
@@ -102,6 +102,32 @@ extension TopdonAccessoryDetailView {
                 self.information = .failure(error)
             }
         }
+    }
+    
+    func connect() {
+        guard let advertisement else {
+            assertionFailure()
+            return
+        }
+        Task {
+            do {
+                try await store.connect(to: advertisement.id)
+            }
+            catch {
+                store.log("Unable to connect to \(advertisement.id). \(error)")
+            }
+        }
+    }
+    
+    var peripheral: NativePeripheral? {
+        store.peripherals.first(where: { $0.value.id == self.id })?.key
+    }
+    
+    var isConnected: Bool {
+        guard let peripheral else {
+            return false
+        }
+        return store.connections.contains(peripheral)
     }
 }
 

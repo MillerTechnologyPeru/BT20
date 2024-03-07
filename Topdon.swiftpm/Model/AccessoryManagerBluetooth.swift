@@ -58,6 +58,27 @@ public extension AccessoryManager {
         scanStream?.stop()
         scanStream = nil
     }
+    
+    func connect(to accessory: TopdonAccessory.Advertisement.ID) async throws {
+        guard let peripheral = self[peripheral: accessory] else {
+            throw CentralError.unknownPeripheral
+        }
+        // already connected
+        guard await loadConnections.contains(peripheral) == false else {
+            return
+        }
+        // initiate connection
+        let central = self.central
+        try await central.connect(to: peripheral)
+    }
+    
+    func disconnect(_ accessory: TopdonAccessory.Advertisement.ID) async {
+        guard let peripheral = self[peripheral: accessory] else {
+            assertionFailure()
+            return
+        }
+        await central.disconnect(peripheral)
+    }
 }
 
 internal extension AccessoryManager {
@@ -73,6 +94,27 @@ internal extension AccessoryManager {
                 }
                 try await Task.sleep(timeInterval: 0.5)
             }
+        }
+        // observe connections
+        Task { [weak self] in
+            while let self = self {
+                let newState = await self.loadConnections
+                let oldValue = self.connections
+                if newState != oldValue {
+                    self.connections = newState
+                }
+                try await Task.sleep(timeInterval: 0.2)
+            }
+        }
+    }
+    
+    var loadConnections: Set<NativePeripheral> {
+        get async {
+            let peripherals = await self.central
+                .peripherals
+                .filter { $0.value }
+                .map { $0.key }
+            return Set(peripherals)
         }
     }
     
