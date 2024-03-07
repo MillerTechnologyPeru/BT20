@@ -11,7 +11,7 @@ struct TopdonApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(Store.shared)
+                .environmentObject(AccessoryManager.shared)
         }
     }
 }
