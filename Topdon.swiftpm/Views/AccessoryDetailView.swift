@@ -28,6 +28,9 @@ struct TopdonAccessoryDetailView: View {
     private var isReloading = false
     
     @State
+    private var advertisement: TopdonAccessory.Advertisement?
+    
+    @State
     private var information: Result<TopdonAccessoryInfo, Error>?
     
     init(
@@ -44,7 +47,7 @@ struct TopdonAccessoryDetailView: View {
                     information: information
                 )
             } else {
-                Text("Accessory \(id.rawValue) not in range")
+                ProgressView()
                     .navigationTitle("\(id.rawValue)")
             }
         }
@@ -63,11 +66,42 @@ struct TopdonAccessoryDetailView: View {
 extension TopdonAccessoryDetailView {
     
     func reload() {
+        // load advertisement
+        guard let advertisement = store.peripherals.values.first(where: { $0.id == self.id }) else {
+            // not longer in scan cache
+            return
+        }
+        self.advertisement = advertisement
+        // accessory metadata
+        if let accessoryInfo = store.accessoryInfo {
+            self.information = accessoryInfo[advertisement.type].flatMap { .success($0) }
+        } else {
+            // load accessory info
+            fetchAccessoryInfo()
+        }
+        // Bluetooth
         
     }
     
-    var advertisement: TopdonAccessory.Advertisement? {
-        store.peripherals.values.first(where: { $0.address == self.id })
+    func fetchAccessoryInfo() {
+        guard let advertisement else {
+            assertionFailure()
+            return
+        }
+        // networking and Bluetooth
+        let store = self.store
+        isReloading = true
+        reloadTask = Task(priority: .userInitiated) {
+            defer { isReloading = false }
+            do {
+                let accessoryInfo = try await store.downloadAccessoryInfo()
+                self.information = accessoryInfo[advertisement.type]
+                    .flatMap { .success($0) } ?? .failure(CocoaError(.coderValueNotFound))
+            }
+            catch {
+                self.information = .failure(error)
+            }
+        }
     }
 }
 
