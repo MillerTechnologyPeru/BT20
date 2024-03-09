@@ -10,9 +10,7 @@ import Topdon
 
 /// Topdon Accessory Info
 public struct TopdonAccessoryInfo: Equatable, Hashable, Codable, Sendable {
-    
-    public static var type: TopdonAccessory { .bt20 }
-    
+        
     public let symbol: String
     
     public let image: String

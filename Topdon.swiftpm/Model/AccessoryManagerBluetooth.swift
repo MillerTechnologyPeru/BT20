@@ -10,6 +10,7 @@ import Bluetooth
 import GATT
 import DarwinGATT
 import Topdon
+import Telink
 
 public extension AccessoryManager {
     
@@ -59,6 +60,7 @@ public extension AccessoryManager {
         scanStream = nil
     }
     
+    @discardableResult
     func connect(to accessory: TopdonAccessory.Advertisement.ID) async throws -> GATTConnection<NativeCentral> {
         let central = self.central
         guard let peripheral = self[peripheral: accessory] else {
@@ -99,52 +101,60 @@ public extension AccessoryManager {
     /// Read Voltage
     func readVoltage(
         for accessory: TopdonAccessory.Advertisement.ID
-    ) async throws -> AsyncThrowingStream<Topdon.BatteryVoltageNotification, Error> {
-        guard let peripheral = self[peripheral: accessory] else {
-            throw CentralError.unknownPeripheral
-        }
+    ) async throws -> AsyncIndefiniteStream<Topdon.BatteryVoltageNotification> {
         let connection = try await connect(to: accessory)
-        let notifications = try await notifications(for: connection)
-        try await writeCommand(BT20.Command.loggingIntervalDay.data, for: connection)
-        var iterator = notifications.makeAsyncIterator()
-        return AsyncStream(unfolding: {
-            iterator
-                .next()
-                .flatMap { BatteryVoltageNotification(data: $0) }
-        }, onCancel: {
-            notifications.stop()
-        })
-    }
-}
-
-internal extension AccessoryManager {
-    
-    func writeCommand(_ data: Data, for connection: GATTConnection<NativeCentral>) async throws {
-        try await connection.writeTopdonCommand(data)
-    }
-    
-    func notifications(for connection: GATTConnection<NativeCentral>) async throws -> AsyncCentralNotifications<NativeCentral> {
-        guard let characteristic = connection.cache.characteristic(.topdonService, service: .topdonNotificationCharacteristic) else {
-            throw TopdonAppError.characteristicNotFound(.topdonNotificationCharacteristic)
+        let notifications = try await connection.recieveBT20Events()
+        let decoder = TelinkDecoder(isLittleEndian: false)
+        try await Task.sleep(timeInterval: 1.0)
+        try await connection.sendBT20Command(Data(hexadecimal: "55AA0007FFF8FF02FD")!)
+        try await Task.sleep(timeInterval: 1.0)
+        try await connection.sendBT20Command(Data(hexadecimal: "55AA0007FFF8FF03FC")!)
+        try await Task.sleep(timeInterval: 1.0)
+        try await connection.sendBT20Command(Data(hexadecimal: "55AA0009FFF6DD0B0001D7")!)
+        try await Task.sleep(timeInterval: 1.0)
+        try await connection.sendBT20Command(Data(hexadecimal: "55AA0007FFF8DD09D4")!)
+        try await Task.sleep(timeInterval: 1.0)
+        try await connection.sendBT20Command(Data(hexadecimal: "55AA000FFFF0DD0765EC356065EC36A8")!)
+        try await Task.sleep(timeInterval: 1.0)
+        try await connection.sendBT20Command(Data(hexadecimal: "55AA000BFFF4DD0965EC36A6CD")!)
+        try await Task.sleep(timeInterval: 1.0)
+        try await connection.sendBT20Command(Data(hexadecimal: "55AA000DFFF2DD0265EC36A70001C6")!)
+        return AsyncIndefiniteStream<Topdon.BatteryVoltageNotification> { build in
+            for try await event in notifications {
+                self.log("\(event.opcode) \(event.payload.toHexadecimal())")
+                switch event.opcode {
+                case .batteryVoltageNotification:
+                    let batteryNotification = try decoder.decode(BatteryVoltageNotification.self, from: event.payload)
+                    build(batteryNotification)
+                default:
+                    continue
+                }
+            }
         }
-        return try await connection.central.notify(for: characteristic)
     }
 }
 
 internal extension GATTConnection {
     
-    func writeTopdonCommand(_ data: Data) async throws {
-        guard let characteristic = cache.characteristic(.topdonService, service: .topdonCommandCharacteristic) else {
-            throw TopdonAppError.characteristicNotFound(.topdonCommandCharacteristic)
+    func sendBT20Command(_ command: BT20.Command) async throws {
+        guard let characteristic = cache.characteristic(.telinkSerialPortProtocolCommand, service: .telinkSerialPortProtocolService) else {
+            throw TopdonAppError.characteristicNotFound(.telinkSerialPortProtocolCommand)
         }
-        try await central.writeValue(data, for: characteristic, withResponse: false)
+        try await central.sendSerialPortProtocol(command: command, characteristic: characteristic)
     }
     
-    func topdonNotifications() async throws -> AsyncCentralNotifications<Central> {
-        guard let characteristic = cache.characteristic(.topdonService, service: .topdonNotificationCharacteristic) else {
-            throw TopdonAppError.characteristicNotFound(.topdonNotificationCharacteristic)
+    func sendBT20Command(_ command: Data) async throws {
+        guard let characteristic = cache.characteristic(.telinkSerialPortProtocolCommand, service: .telinkSerialPortProtocolService) else {
+            throw TopdonAppError.characteristicNotFound(.telinkSerialPortProtocolCommand)
         }
-        return try await central.notify(for: characteristic)
+        try await central.writeValue(command, for: characteristic, withResponse: false)
+    }
+    
+    func recieveBT20Events() async throws -> AsyncIndefiniteStream<Topdon.BT20.Event> {
+        guard let characteristic = cache.characteristic(.telinkSerialPortProtocolNotification, service: .telinkSerialPortProtocolService) else {
+            throw TopdonAppError.characteristicNotFound(.telinkSerialPortProtocolNotification)
+        }
+        return try await central.recieveSerialPortProtocol(Topdon.BT20.Event.self, characteristic: characteristic)
     }
 }
 
