@@ -48,7 +48,6 @@ struct TopdonAccessoryDetailView: View {
                 )
             } else {
                 ProgressView()
-                    .navigationTitle("\(id.rawValue)")
             }
         }
         .refreshable {
@@ -80,7 +79,7 @@ extension TopdonAccessoryDetailView {
             fetchAccessoryInfo()
         }
         // Bluetooth
-        connect()
+        //connect()
     }
     
     func fetchAccessoryInfo() {
@@ -111,11 +110,20 @@ extension TopdonAccessoryDetailView {
         }
         Task {
             do {
-                try await store.connect(to: advertisement.id)
+                _ = try await store.connect(to: advertisement.id)
             }
             catch {
                 store.log("Unable to connect to \(advertisement.id). \(error)")
             }
+        }
+    }
+    
+    func disconnect() {
+        guard let advertisement else {
+            return
+        }
+        Task {
+            await store.disconnect(advertisement.id)
         }
     }
     
@@ -174,9 +182,11 @@ extension TopdonAccessoryDetailView {
                     // Actions
                     switch advertisement.type {
                     case .bt20:
-                        Button("Start Logging") {
-                            
-                        }
+                        NavigationLink(destination: {
+                            VoltageView(id: advertisement.id)
+                        }, label: {
+                            Text("Real-time Voltage")
+                        })
                     }
                     
                     // Links
