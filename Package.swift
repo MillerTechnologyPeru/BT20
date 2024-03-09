@@ -22,6 +22,10 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/PureSwift/GATT.git",
+            from: "3.2.0"
+        ),
+        .package(
+            url: "https://github.com/MillerTechnologyPeru/Telink.git",
             branch: "master"
         )
     ],
@@ -37,11 +41,34 @@ let package = Package(
                     name: "GATT",
                     package: "GATT"
                 ),
+                .product(
+                    name: "Telink",
+                    package: "Telink"
+                ),
             ]
         ),
         .testTarget(
             name: "TopdonTests",
-            dependencies: ["Topdon"]
+            dependencies: [
+                "Topdon",
+                .product(
+                    name: "Bluetooth",
+                    package: "Bluetooth"
+                ),
+                .product(
+                    name: "BluetoothGAP",
+                    package: "Bluetooth",
+                    condition: .when(platforms: [.macOS, .linux])
+                ),
+                .product(
+                    name: "GATT",
+                    package: "GATT"
+                ),
+                .product(
+                    name: "Telink",
+                    package: "Telink"
+                )
+            ]
         ),
     ]
 )
