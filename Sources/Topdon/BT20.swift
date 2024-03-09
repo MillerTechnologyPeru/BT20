@@ -41,12 +41,11 @@ extension BT20.Advertisement {
             return nil
         }
         guard let serviceUUIDs = advertisement.serviceUUIDs,
-              serviceUUIDs.count == 5,
-              Set(serviceUUIDs.prefix(2)) == Self.services else {
+              serviceUUIDs.count == 5 else {
             return nil
         }
         let macBytes = serviceUUIDs
-            .suffix(3)
+            .filter { Self.services.contains($0) == false }
             .compactMap {
             switch $0 {
             case let .bit16(value):
