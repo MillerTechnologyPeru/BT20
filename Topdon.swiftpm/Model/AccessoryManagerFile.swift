@@ -100,6 +100,5 @@ internal extension AccessoryManager {
         
         case accessoryInfo = "Topdon.plist"
         
-        
     }
 }

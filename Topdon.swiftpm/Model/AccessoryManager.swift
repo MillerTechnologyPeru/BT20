@@ -46,7 +46,7 @@ public final class AccessoryManager: ObservableObject {
     
     internal lazy var documentDirectory = loadDocumentDirectory()
     
-    internal lazy var cachesDirectory = loadDocumentDirectory()
+    internal lazy var cachesDirectory = loadCachesDirectory()
     
     @Published
     internal var fileManagerCache = FileManagerCache()
