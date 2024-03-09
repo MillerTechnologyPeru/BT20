@@ -8,6 +8,7 @@
 import Foundation
 import Bluetooth
 import GATT
+import Telink
 
 public enum BT20 {
     
@@ -75,6 +76,27 @@ extension BT20.Advertisement {
 
 public extension BT20 {
     
+    struct Command: Equatable, Hashable, Codable, Sendable, Telink.SerialPortProtocolCommand {
+        
+        public static var type: SerialPortProtocolType { .topdonBM2 }
+        
+        public let opcode: TopdonSerialMessageOpcode
+        
+        public let payload: Data
+    }
+    
+    struct Event: Equatable, Hashable, Codable, Sendable, Telink.SerialPortProtocolEvent {
+        
+        public static var type: SerialPortProtocolType { .topdonBM2 }
+        
+        public let opcode: TopdonSerialMessageOpcode
+        
+        public let payload: Data
+    }
+}
+/*
+public extension BT20 {
+    
     enum Command: String, DataConstant {
         
         case version = "55AA0007FFF8DD09D4"
@@ -108,3 +130,4 @@ public extension DataConstant {
         return data
     }
 }
+*/
