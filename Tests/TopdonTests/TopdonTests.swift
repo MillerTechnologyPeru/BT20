@@ -84,8 +84,8 @@ final class TopdonTests: XCTestCase {
             let notification = event.payload
             
             XCTAssertEqual(notification.date.description, "2024-03-06 09:09:00 +0000")
-            XCTAssertEqual(notification.voltage, 12518)
-            XCTAssertEqual(Float(notification.voltage) / 1000, 12.518)
+            XCTAssertEqual(notification.voltage.rawValue, 12518)
+            XCTAssertEqual(notification.voltage.voltage, 12.518)
         }
         
         do {
@@ -96,8 +96,8 @@ final class TopdonTests: XCTestCase {
             let notification = event.payload
             
             XCTAssertEqual(notification.date.description, "2024-03-09 10:15:14 +0000")
-            XCTAssertEqual(notification.voltage, 12512)
-            XCTAssertEqual(Float(notification.voltage) / 1000, 12.512)
+            XCTAssertEqual(notification.voltage.rawValue, 12512)
+            XCTAssertEqual(notification.voltage.voltage, 12.512)
         }
     }
 }
