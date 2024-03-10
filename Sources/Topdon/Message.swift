@@ -6,6 +6,14 @@
 //
 
 import Foundation
+import Telink
+
+public protocol TopdonSerialMessage {
+    
+    static var opcode: TopdonSerialMessageOpcode { get }
+}
+
+// MARK: - Supporting Types
 
 /// Topdon Serial Message Opcode
 public struct TopdonSerialMessageOpcode: Equatable, Hashable, Codable, Sendable {
@@ -38,6 +46,8 @@ extension TopdonSerialMessageOpcode: CustomStringConvertible {
 // MARK: - Constants
 
 public extension TopdonSerialMessageOpcode {
+    
+    static var batteryVoltageCommand: TopdonSerialMessageOpcode { 0xFFF2DD02 }
     
     static var batteryVoltageNotification: TopdonSerialMessageOpcode { 0xFFF0DD03 }
     

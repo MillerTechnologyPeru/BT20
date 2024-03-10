@@ -76,58 +76,50 @@ extension BT20.Advertisement {
 
 public extension BT20 {
     
-    struct Command: Equatable, Hashable, Codable, Sendable, Telink.SerialPortProtocolCommand {
+    struct Command <T>: Equatable, Hashable, Encodable, Sendable, Telink.SerialPortProtocolCommand where T: Equatable, T: Hashable, T: Encodable, T: Sendable, T: BT20Message {
         
         public static var type: SerialPortProtocolType { .topdonBM2 }
         
         public let opcode: TopdonSerialMessageOpcode
         
-        public let payload: Data
-    }
-    
-    struct Event: Equatable, Hashable, Codable, Sendable, Telink.SerialPortProtocolEvent {
+        public let payload: T
         
-        public static var type: SerialPortProtocolType { .topdonBM2 }
-        
-        public let opcode: TopdonSerialMessageOpcode
-        
-        public let payload: Data
-    }
-}
-/*
-public extension BT20 {
-    
-    enum Command: String, DataConstant {
-        
-        case version = "55AA0007FFF8DD09D4"
-        
-        case loggingIntervalSecond = "55AA0009FFF6DD0B003CEA"
-        
-        case loggingIntervalMinute = "55AA0009FFF6DD0B0001D7"
-        
-        case loggingIntervalDay = "55AA0009FFF6DD0B0E10C8"
-    }
-    
-    enum Notification: String, DataConstant {
-        
-        // Ackowledgement
-        case confirmation = "55AA0008FFF7DD0B00D6"
-        
-        case batteryVoltagePrefix = "55AA000FFFF0DD0365E8"
-        
-    }
-}
-
-public protocol DataConstant: RawRepresentable where RawValue == String { }
-
-public extension DataConstant {
-    
-    var data: Data {
-        guard let data = Data(hexadecimal: rawValue) else {
-            assertionFailure()
-            return Data()
+        public init(_ command: T) {
+            self.opcode = T.opcode
+            self.payload = command
         }
-        return data
+    }
+    
+    struct Event <T>: Equatable, Hashable, Sendable, Telink.SerialPortProtocolEvent where T: Equatable, T: Hashable, T: Decodable, T: Sendable, T: BT20Message {
+        
+        public static var type: SerialPortProtocolType { .topdonBM2 }
+        
+        public let opcode: TopdonSerialMessageOpcode
+        
+        public let payload: T
+        
+        internal enum CodingKeys: String, CodingKey {
+            case opcode
+            case payload
+        }
     }
 }
-*/
+
+extension BT20.Event: Decodable {
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let opcode = try container.decode(TopdonSerialMessageOpcode.self, forKey: .opcode)
+        guard opcode == T.opcode else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Invalid opcode \(opcode)"))
+        }
+        let payload = try container.decode(T.self, forKey: .payload)
+        self.opcode = opcode
+        self.payload = payload
+    }
+}
+
+public protocol BT20Message {
+    
+    static var opcode: TopdonSerialMessageOpcode { get }
+}
