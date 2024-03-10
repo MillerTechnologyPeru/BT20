@@ -90,32 +90,13 @@ public extension BT20 {
         }
     }
     
-    struct Event <T>: Equatable, Hashable, Sendable, Telink.SerialPortProtocolEvent where T: Equatable, T: Hashable, T: Decodable, T: Sendable, T: BT20Message {
+    struct Event: Equatable, Hashable, Decodable, Sendable, Telink.SerialPortProtocolEvent {
         
         public static var type: SerialPortProtocolType { .topdonBM2 }
         
         public let opcode: TopdonSerialMessageOpcode
         
-        public let payload: T
-        
-        internal enum CodingKeys: String, CodingKey {
-            case opcode
-            case payload
-        }
-    }
-}
-
-extension BT20.Event: Decodable {
-    
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let opcode = try container.decode(TopdonSerialMessageOpcode.self, forKey: .opcode)
-        guard opcode == T.opcode else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Invalid opcode \(opcode)"))
-        }
-        let payload = try container.decode(T.self, forKey: .payload)
-        self.opcode = opcode
-        self.payload = payload
+        public let payload: Data
     }
 }
 

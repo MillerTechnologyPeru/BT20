@@ -21,7 +21,7 @@ public extension BatteryVoltageNotification {
     var date: Date { Date(timeIntervalSince1970: TimeInterval(timestamp)) }
 }
 
-extension BatteryVoltageNotification {
+extension BatteryVoltageNotification: Identifiable {
     
     public var id: UInt32 {
         timestamp

@@ -105,7 +105,7 @@ public extension AccessoryManager {
         let connection = try await connect(to: accessory)
         let notifications = try await connection.recieveBT20Events()
         let decoder = TelinkDecoder(isLittleEndian: false)
-        try await connection.sendBT20Command(Data(hexadecimal: "55AA000DFFF2DD0265EC36A70001C6")!)
+        try await connection.sendBT20Command(BatteryVoltageCommand())
         return AsyncIndefiniteStream<Topdon.BatteryVoltageNotification> { build in
             for try await event in notifications {
                 self.log("\(event.opcode) \(event.payload.toHexadecimal())")
@@ -123,18 +123,14 @@ public extension AccessoryManager {
 
 internal extension GATTConnection {
     
-    func sendBT20Command(_ command: BT20.Command) async throws {
+    func sendBT20Command<T>(_ command: T) async throws where T: Equatable, T: Hashable, T: Encodable, T: Sendable, T: BT20Message {
         guard let characteristic = cache.characteristic(.telinkSerialPortProtocolCommand, service: .telinkSerialPortProtocolService) else {
             throw TopdonAppError.characteristicNotFound(.telinkSerialPortProtocolCommand)
         }
-        try await central.sendSerialPortProtocol(command: command, characteristic: characteristic)
-    }
-    
-    func sendBT20Command(_ command: Data) async throws {
-        guard let characteristic = cache.characteristic(.telinkSerialPortProtocolCommand, service: .telinkSerialPortProtocolService) else {
-            throw TopdonAppError.characteristicNotFound(.telinkSerialPortProtocolCommand)
-        }
-        try await central.writeValue(command, for: characteristic, withResponse: false)
+        try await central.sendSerialPortProtocol(
+            command: BT20.Command(command),
+            characteristic: characteristic
+        )
     }
     
     func recieveBT20Events() async throws -> AsyncIndefiniteStream<Topdon.BT20.Event> {

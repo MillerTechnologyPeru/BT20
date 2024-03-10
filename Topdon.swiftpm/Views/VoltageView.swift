@@ -19,15 +19,16 @@ struct VoltageView: View {
     private var store: AccessoryManager
     
     @State
-    var entries = [(Date, Float)]()
+    var values = [BatteryVoltageNotification]()
     
     var body: some View {
         VStack(alignment: .leading) {
             List {
-                ForEach(entries, id: \.0) { (date, voltage) in
+                ForEach(values) { notification in
                     HStack {
-                        Text(date, style: .time)
-                        Text("\(voltage)v")
+                        Text(notification.date, style: .date)
+                        Text(notification.date, style: .time)
+                        Text("\(notification.voltage.voltage)v")
                     }
                 }
             }
@@ -39,7 +40,7 @@ struct VoltageView: View {
                 Task {
                     do {
                         for try await value in stream {
-                            entries.append((Date(), Float(value.voltage) / 1000))
+                            values.insert(value, at: 0)
                         }
                     }
                     catch {

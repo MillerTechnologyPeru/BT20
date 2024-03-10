@@ -71,7 +71,7 @@ final class TopdonTests: XCTestCase {
             )
         )
         let encodedData = try message.encode()
-        XCTAssertEqual(data.toHexadecimal(), encodedData.toHexadecimal())
+        XCTAssertEqual(data, encodedData)
     }
     
     func testBT20VoltageNotification() throws {
