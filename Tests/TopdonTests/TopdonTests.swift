@@ -5,6 +5,7 @@ import Bluetooth
 import BluetoothGAP
 #endif
 import GATT
+import Telink
 @testable import Topdon
 
 final class TopdonTests: XCTestCase {
@@ -60,17 +61,29 @@ final class TopdonTests: XCTestCase {
     }
     #endif
     
-    func testBT20VoltageLevel() throws {
+    func testBT20VoltageCommand() throws {
+        
+        let data = Data(hexadecimal: "55AA000DFFF2DD0265EC36A70001C6")!
+        
+        let message = try SerialPortProtocolMessage(
+            command: BT20.Command(
+                BatteryVoltageCommand()
+            )
+        )
+        let encodedData = try message.encode()
+        XCTAssertEqual(data.toHexadecimal(), encodedData.toHexadecimal())
+    }
+    
+    func testBT20VoltageNotification() throws {
         
         do {
             let data = Data([0x55, 0xAA, 0x00, 0x0F, 0xFF, 0xF0, 0xDD, 0x03, 0x65, 0xE8, 0x32, 0xAC, 0x30, 0xE6, 0x00, 0x00, 0x1B])
             
-            guard let notification = BatteryVoltageNotification(data: data) else {
-                XCTFail()
-                return
-            }
+            let message = try SerialPortProtocolMessage(from: data)
+            let event = try BT20.Event<BatteryVoltageNotification>(from: message)
+            let notification = event.payload
             
-            XCTAssertEqual(notification.timestamp, 0x32AC)
+            XCTAssertEqual(notification.date.description, "2024-03-06 09:09:00 +0000")
             XCTAssertEqual(notification.voltage, 12518)
             XCTAssertEqual(Float(notification.voltage) / 1000, 12.518)
         }
@@ -78,12 +91,11 @@ final class TopdonTests: XCTestCase {
         do {
             let data = Data([0x55, 0xAA, 0x00, 0x0F, 0xFF, 0xF0, 0xDD, 0x03, 0x65, 0xEC, 0x36, 0xB2, 0x30, 0xE0, 0x00, 0x00, 0x03])
             
-            guard let notification = BatteryVoltageNotification(data: data) else {
-                XCTFail()
-                return
-            }
+            let message = try SerialPortProtocolMessage(from: data)
+            let event = try BT20.Event<BatteryVoltageNotification>(from: message)
+            let notification = event.payload
             
-            XCTAssertEqual(notification.timestamp, 14002)
+            XCTAssertEqual(notification.date.description, "2024-03-09 10:15:14 +0000")
             XCTAssertEqual(notification.voltage, 12512)
             XCTAssertEqual(Float(notification.voltage) / 1000, 12.512)
         }
