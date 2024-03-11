@@ -10,33 +10,35 @@ import Bluetooth
 import GATT
 import Telink
 
-public enum BT20 {
+/// Topdon BT20 Battery Monitor
+public struct BT20: Equatable, Hashable, Sendable {
     
-    public struct Advertisement: Equatable, Hashable, Sendable {
-        
-        public static var type: TopdonAccessory { .bt20 }
-        
-        public static var name: String { type.rawValue }
-        
-        public static var services: Set<BluetoothUUID> {
-            [
-                .humanInterfaceDevice,
-                .batteryService
-            ]
-        }
-        
-        public let address: BluetoothAddress
+    public static var type: TopdonAccessoryType { .bt20 }
+    
+    public static var name: String { type.rawValue }
+    
+    public static var services: Set<BluetoothUUID> {
+        [
+            .humanInterfaceDevice,
+            .batteryService
+        ]
     }
+    
+    public let address: BluetoothAddress
 }
 
-extension BT20.Advertisement: Identifiable {
+// MARK: - Identifiable
+
+extension BT20: Identifiable {
     
     public var id: BluetoothAddress {
         address
     }
 }
 
-extension BT20.Advertisement {
+// MARK: - Advertisement
+
+public extension BT20 {
     
     init?<T: AdvertisementData>(_ advertisement: T) {
         guard let localName = advertisement.localName,
