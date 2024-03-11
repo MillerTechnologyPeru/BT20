@@ -97,6 +97,14 @@ public extension BT20 {
         public let opcode: TopdonSerialMessageOpcode
         
         public let payload: Data
+        
+        public func decode<T>(_ type: T.Type) throws -> T where T: Decodable, T: BT20Message {
+            guard T.opcode == self.opcode else {
+                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Invalid opcode \(type.opcode)"))
+            }
+            let decoder = TelinkDecoder(isLittleEndian: false)
+            return try decoder.decode(type, from: payload)
+        }
     }
 }
 
