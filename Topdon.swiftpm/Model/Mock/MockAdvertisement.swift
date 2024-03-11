@@ -70,6 +70,30 @@ public extension MockAdvertisementData {
         serviceUUIDs: [.savantSystems2],
         solicitedServiceUUIDs: nil
     )
+    
+    static let bt20 = MockAdvertisementData(
+        localName: "BT20",
+        manufacturerData: nil,
+        txPowerLevel: nil,
+        serviceData: nil,
+        serviceUUIDs: [
+            .bit16(0x5E78),
+            .bit16(0x91E8),
+            .bit16(0x1480),
+            .humanInterfaceDevice,
+            .batteryService
+        ],
+        solicitedServiceUUIDs: nil
+    )
+    
+    static let tb6000Pro = MockAdvertisementData(
+        localName: "TB6000Pro",
+        manufacturerData: GATT.ManufacturerSpecificData(data: Data([0x56, 0x00, 0x78, 0x5E, 0xE8, 0x90, 0x5A, 0x42])),
+        txPowerLevel: nil,
+        serviceData: nil,
+        serviceUUIDs: nil,
+        solicitedServiceUUIDs: nil
+    )
 }
 
 #endif

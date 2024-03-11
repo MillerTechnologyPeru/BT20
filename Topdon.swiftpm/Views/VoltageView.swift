@@ -13,7 +13,7 @@ import Topdon
 
 struct VoltageView: View {
     
-    let id: TopdonAccessory.Advertisement.ID
+    let id: TopdonAccessory.ID
     
     @EnvironmentObject
     private var store: AccessoryManager

@@ -26,7 +26,7 @@ public final class AccessoryManager: ObservableObject {
     }
     
     @Published
-    public internal(set) var peripherals = [NativeCentral.Peripheral: TopdonAccessory.Advertisement]()
+    public internal(set) var peripherals = [NativeCentral.Peripheral: TopdonAccessory]()
     
     public var connections: Set<NativeCentral.Peripheral> {
         Set(connectionsByPeripherals.keys)

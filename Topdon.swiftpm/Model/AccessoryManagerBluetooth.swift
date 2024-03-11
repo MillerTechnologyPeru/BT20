@@ -19,7 +19,10 @@ public extension AccessoryManager {
         return peripherals.first(where: { $0.value.address == address })?.key
     }
     
-    func scan(duration: TimeInterval? = nil) async throws {
+    func scan(
+        duration: TimeInterval? = nil,
+        filterServices: Bool = false
+    ) async throws {
         let bluetoothState = await central.state
         guard bluetoothState == .poweredOn else {
             throw TopdonAppError.bluetoothUnavailable
@@ -27,7 +30,7 @@ public extension AccessoryManager {
         let filterDuplicates = true //preferences.filterDuplicates
         self.peripherals.removeAll(keepingCapacity: true)
         stopScanning()
-        let services = Set(Topdon.BT20.Advertisement.services)
+        let services = filterServices ? Set(BT20.services) : []
         let scanStream = central.scan(
             with: services,
             filterDuplicates: filterDuplicates
@@ -61,7 +64,7 @@ public extension AccessoryManager {
     }
     
     @discardableResult
-    func connect(to accessory: TopdonAccessory.Advertisement.ID) async throws -> GATTConnection<NativeCentral> {
+    func connect(to accessory: TopdonAccessory.ID) async throws -> GATTConnection<NativeCentral> {
         let central = self.central
         guard let peripheral = self[peripheral: accessory] else {
             throw CentralError.unknownPeripheral
@@ -89,7 +92,7 @@ public extension AccessoryManager {
         return connectionCache
     }
     
-    func disconnect(_ accessory: TopdonAccessory.Advertisement.ID) async {
+    func disconnect(_ accessory: TopdonAccessory.ID) async {
         guard let peripheral = self[peripheral: accessory] else {
             assertionFailure()
             return
@@ -100,7 +103,7 @@ public extension AccessoryManager {
     
     /// Read Voltage
     func readVoltage(
-        for accessory: TopdonAccessory.Advertisement.ID
+        for accessory: TopdonAccessory.ID
     ) async throws -> AsyncIndefiniteStream<Topdon.BatteryVoltageNotification> {
         let connection = try await connect(to: accessory)
         let notifications = try await connection.recieveBT20Events()
@@ -184,7 +187,7 @@ internal extension AccessoryManager {
     }
     
     func found(_ scanData: ScanData<NativeCentral.Peripheral, NativeCentral.Advertisement>) -> Bool {
-        guard let advertisement = TopdonAccessory.Advertisement(scanData.advertisementData) else {
+        guard let advertisement = TopdonAccessory(scanData.advertisementData) else {
             return false
         }
         self.peripherals[scanData.peripheral] = advertisement

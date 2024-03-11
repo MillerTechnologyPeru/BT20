@@ -16,7 +16,7 @@ public extension MockScanData {
     
     static let beacon = MockScanData(
         peripheral: .beacon,
-        date: Date(timeIntervalSinceReferenceDate: 10_000),
+        date: Date(timeIntervalSinceReferenceDate: 10_001),
         rssi: -20,
         advertisementData: .beacon,
         isConnectable: true
@@ -24,12 +24,27 @@ public extension MockScanData {
     
     static let savantThermostat = MockScanData(
         peripheral: .smartThermostat,
-        date: Date(timeIntervalSinceReferenceDate: 10_100),
+        date: Date(timeIntervalSinceReferenceDate: 10_102),
         rssi: -127,
         advertisementData: .savantThermostat,
         isConnectable: true
     )
     
+    static let bt20 = MockScanData(
+        peripheral: .bt20,
+        date: Date(timeIntervalSinceReferenceDate: 10_103),
+        rssi: -127,
+        advertisementData: .bt20,
+        isConnectable: true
+    )
+    
+    static let tb6000Pro = MockScanData(
+        peripheral: .tb6000Pro,
+        date: Date(timeIntervalSinceReferenceDate: 10_104),
+        rssi: -127,
+        advertisementData: .tb6000Pro,
+        isConnectable: true
+    )
 }
 
 public extension MockCentral.Peripheral {
@@ -53,6 +68,13 @@ public extension MockCentral.Peripheral {
         Peripheral(id: BluetoothAddress(rawValue: "00:1A:7D:DA:71:13")!)
     }
     
+    static var bt20: Peripheral {
+        Peripheral(id: BluetoothAddress(rawValue: "78:5E:E8:91:80:14")!)
+    }
+    
+    static var tb6000Pro: Peripheral {
+        Peripheral(id: BluetoothAddress(rawValue: "78:5E:E8:90:5A:42")!)
+    }
 }
 
 public extension MockCentral.Peripheral.ID {

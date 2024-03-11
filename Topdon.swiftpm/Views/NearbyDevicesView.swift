@@ -59,7 +59,7 @@ private extension NearbyDevicesView {
         
         let peripheral: NativePeripheral
         
-        let advertisement: TopdonAccessory.Advertisement
+        let advertisement: TopdonAccessory
     }
     
     var items: [Item] {
@@ -111,7 +111,7 @@ private extension NearbyDevicesView {
             ForEach(items) { item in
                 NavigationLink(destination: {
                     TopdonAccessoryDetailView(
-                        id: item.advertisement.id
+                        accessory: item.advertisement
                     )
                 }, label: {
                     TopdonAdvertisementRow(

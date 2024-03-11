@@ -362,7 +362,7 @@ internal extension MockCentral {
     struct State {
         
         var isScanning = false
-        var scanData: [MockScanData] = [.beacon, .savantThermostat]
+        var scanData: [MockScanData] = [.beacon, .savantThermostat, .bt20, .tb6000Pro]
         var connected = Set<Peripheral>()
         var characteristics: [MockService: [MockCharacteristic]] = [:]
     

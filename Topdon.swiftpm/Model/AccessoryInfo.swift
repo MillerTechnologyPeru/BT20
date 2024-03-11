@@ -24,13 +24,13 @@ public extension TopdonAccessoryInfo {
     
     struct Database: Equatable, Hashable, Sendable {
         
-        public let accessories: [TopdonAccessory: TopdonAccessoryInfo]
+        public let accessories: [TopdonAccessoryType: TopdonAccessoryInfo]
     }
 }
 
 public extension TopdonAccessoryInfo.Database {
     
-    subscript(type: TopdonAccessory) -> TopdonAccessoryInfo? {
+    subscript(type: TopdonAccessoryType) -> TopdonAccessoryInfo? {
         accessories[type]
     }
 }
@@ -62,7 +62,7 @@ extension TopdonAccessoryInfo.Database: Codable {
     public init(from decoder: Decoder) throws {
         let accessories = try [String: TopdonAccessoryInfo].init(from: decoder)
         self.accessories = try accessories.mapKeys {
-            guard let key = TopdonAccessory(rawValue: $0) else {
+            guard let key = TopdonAccessoryType(rawValue: $0) else {
                 throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Invalid key \($0)"))
             }
             return key

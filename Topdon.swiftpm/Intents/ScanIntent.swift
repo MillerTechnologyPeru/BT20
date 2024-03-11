@@ -54,7 +54,7 @@ struct ScanIntent: AppIntent {
 @MainActor
 private extension ScanIntent {
     
-    func view(for results: [TopdonAccessory.Advertisement]) -> some View {
+    func view(for results: [TopdonAccessory]) -> some View {
         HStack(alignment: .top, spacing: 0) {
             VStack(alignment: .leading, spacing: 8) {
                 if results.isEmpty {
@@ -76,7 +76,7 @@ private extension ScanIntent {
         }
     }
     
-    func view(for advertisement: TopdonAccessory.Advertisement) -> some View {
+    func view(for advertisement: TopdonAccessory) -> some View {
         TopdonAdvertisementRow(
             advertisement: advertisement
         )

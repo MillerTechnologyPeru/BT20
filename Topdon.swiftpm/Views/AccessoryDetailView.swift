@@ -13,7 +13,7 @@ import Topdon
 
 struct TopdonAccessoryDetailView: View {
     
-    let id: TopdonAccessory.Advertisement.ID
+    let accessory: TopdonAccessory
     
     @EnvironmentObject
     private var store: AccessoryManager
@@ -28,27 +28,20 @@ struct TopdonAccessoryDetailView: View {
     private var isReloading = false
     
     @State
-    private var advertisement: TopdonAccessory.Advertisement?
-    
-    @State
     private var information: Result<TopdonAccessoryInfo, Error>?
     
     init(
-        id: TopdonAccessory.Advertisement.ID
+        accessory: TopdonAccessory
     ) {
-        self.id = id
+        self.accessory = accessory
     }
     
     var body: some View {
         VStack {
-            if let advertisement {
-                StateView(
-                    advertisement: advertisement,
-                    information: information
-                )
-            } else {
-                ProgressView()
-            }
+            StateView(
+                accessory: accessory,
+                information: information
+            )
         }
         .refreshable {
             reload()
@@ -65,15 +58,9 @@ struct TopdonAccessoryDetailView: View {
 extension TopdonAccessoryDetailView {
     
     func reload() {
-        // load advertisement
-        guard let advertisement = store.peripherals.values.first(where: { $0.id == self.id }) else {
-            // not longer in scan cache
-            return
-        }
-        self.advertisement = advertisement
         // accessory metadata
         if let accessoryInfo = store.accessoryInfo {
-            self.information = accessoryInfo[advertisement.type].flatMap { .success($0) }
+            self.information = accessoryInfo[accessory.type].flatMap { .success($0) }
         } else {
             // load accessory info
             fetchAccessoryInfo()
@@ -83,10 +70,6 @@ extension TopdonAccessoryDetailView {
     }
     
     func fetchAccessoryInfo() {
-        guard let advertisement else {
-            assertionFailure()
-            return
-        }
         // networking and Bluetooth
         let store = self.store
         isReloading = true
@@ -94,7 +77,7 @@ extension TopdonAccessoryDetailView {
             defer { isReloading = false }
             do {
                 let accessoryInfo = try await store.downloadAccessoryInfo()
-                self.information = accessoryInfo[advertisement.type]
+                self.information = accessoryInfo[accessory.type]
                     .flatMap { .success($0) } ?? .failure(CocoaError(.coderValueNotFound))
             }
             catch {
@@ -104,31 +87,24 @@ extension TopdonAccessoryDetailView {
     }
     
     func connect() {
-        guard let advertisement else {
-            assertionFailure()
-            return
-        }
         Task {
             do {
-                _ = try await store.connect(to: advertisement.id)
+                _ = try await store.connect(to: accessory.id)
             }
             catch {
-                store.log("Unable to connect to \(advertisement.id). \(error)")
+                store.log("Unable to connect to \(accessory.id). \(error)")
             }
         }
     }
     
     func disconnect() {
-        guard let advertisement else {
-            return
-        }
         Task {
-            await store.disconnect(advertisement.id)
+            await store.disconnect(accessory.id)
         }
     }
     
     var peripheral: NativePeripheral? {
-        store.peripherals.first(where: { $0.value.id == self.id })?.key
+        store.peripherals.first(where: { $0.value.id == self.accessory.id })?.key
     }
     
     var isConnected: Bool {
@@ -143,7 +119,7 @@ extension TopdonAccessoryDetailView {
     
     struct StateView: View {
         
-        let advertisement: TopdonAccessory.Advertisement
+        let accessory: TopdonAccessory
         
         let information: Result<TopdonAccessoryInfo, Error>?
         
@@ -177,16 +153,18 @@ extension TopdonAccessoryDetailView {
                     .padding()
                     
                     // MAC Address
-                    Text(verbatim: advertisement.address.rawValue)
+                    Text(verbatim: accessory.address.rawValue)
                     
                     // Actions
-                    switch advertisement.type {
+                    switch accessory.type {
                     case .bt20:
                         NavigationLink(destination: {
-                            VoltageView(id: advertisement.id)
+                            VoltageView(id: accessory.id)
                         }, label: {
                             Text("Real-time Voltage")
                         })
+                    case .tb6000Pro:
+                        EmptyView()
                     }
                     
                     // Links
@@ -200,265 +178,11 @@ extension TopdonAccessoryDetailView {
                     }
                 }
             }
-            .navigationTitle("\(advertisement.name)")
+            .navigationTitle("\(accessory.name)")
         }
     }
 }
 
-/*
-extension TopdonDetailView {
-    
-    func reload() {
-        let oldTask = reloadTask
-        reloadTask = Task {
-            self.error = nil
-            self.isReloading = true
-            defer { self.isReloading = false }
-            await oldTask?.value
-            do {
-                guard let beacons = store.peripherals[peripheral], beacons.isEmpty == false else {
-                    throw CentralError.unknownPeripheral
-                }
-                self.address = beacons.compactMapValues { $0.address }.values.first
-                self.capability = beacons.compactMap { $0.value.capability }.first ?? []
-                self.ioCapability = beacons.compactMap { $0.value.ioCapability }.first ?? []
-                // read characteristics
-                try await store.central.connection(for: peripheral) { connection in
-                    try await readCharacteristics(connection: connection)
-                }
-            }
-            catch {
-                self.error = error.localizedDescription
-            }
-        }
-    }
-    
-    func readCharacteristics(connection: GATTConnection<NativeCentral>) async throws {
-        var batteryService = ServiceSection(
-            id: .batteryService,
-            name: "Battery Service",
-            characteristics: []
-        )
-        
-        // read battery level
-        if let characteristic = connection.cache.characteristic(.batteryLevel, service: .batteryService) {
-            let data = try await connection.central.readValue(for: characteristic)
-            guard data.count == 1 else {
-                throw TopdonAppError.invalidCharacteristicValue(.batteryLevel)
-            }
-            let value = data[0]
-            batteryService.characteristics.append(
-                CharacteristicItem(
-                    id: characteristic.uuid.rawValue,
-                    name: "Battery Level",
-                    value: "\(value)%"
-                )
-            )
-        }
-        
-        // read temperature and humidity
-        var thermometerService = ServiceSection(
-            id: TemperatureHumidityCharacteristic.service,
-            name: "Mi Thermometer Service",
-            characteristics: []
-        )
-        if let characteristic = connection.cache.characteristic(TemperatureHumidityCharacteristic.uuid, service: TemperatureHumidityCharacteristic.service) {
-            let data = try await connection.central.readValue(for: characteristic)
-            guard let value = TemperatureHumidityCharacteristic(data: data) else {
-                throw TopdonAppError.invalidCharacteristicValue(TemperatureHumidityCharacteristic.uuid)
-            }
-            thermometerService.characteristics += [
-                CharacteristicItem(
-                    id: characteristic.uuid.rawValue + "-" + "Temperature",
-                    name: "Temperature",
-                    value: value.temperature.description
-                ),
-                CharacteristicItem(
-                    id: characteristic.uuid.rawValue + "-" + "Humidity",
-                    name: "Humidity",
-                    value: value.humidity.description
-                ),
-                CharacteristicItem(
-                    id: characteristic.uuid.rawValue + "-" + "BatteryVoltage",
-                    name: "Battery Voltage",
-                    value: value.batteryVoltage.description
-                )
-            ]
-        }
-        
-        // read device information
-        var deviceInformationService = ServiceSection(
-            id: .deviceInformation,
-            name: "Device Information",
-            characteristics: []
-        )
-        if let characteristic = connection.cache.characteristic(.manufacturerNameString, service: .deviceInformation) {
-            let data = try await connection.central.readValue(for: characteristic)
-            guard let value = String(data: data, encoding: .utf8) else {
-                throw TopdonAppError.invalidCharacteristicValue(.manufacturerNameString)
-            }
-            deviceInformationService.characteristics.append(
-                CharacteristicItem(
-                    id: BluetoothUUID.manufacturerNameString.rawValue,
-                    name: "Manufacturer Name",
-                    value: value
-                )
-            )
-        }
-        if let characteristic = connection.cache.characteristic(.modelNumberString, service: .deviceInformation) {
-            let data = try await connection.central.readValue(for: characteristic)
-            guard let value = String(data: data, encoding: .utf8) else {
-                throw TopdonAppError.invalidCharacteristicValue(.modelNumberString)
-            }
-            deviceInformationService.characteristics.append(
-                CharacteristicItem(
-                    id: BluetoothUUID.modelNumberString.rawValue,
-                    name: "Model",
-                    value: value
-                )
-            )
-        }
-        if let characteristic = connection.cache.characteristic(.serialNumberString, service: .deviceInformation) {
-            let data = try await connection.central.readValue(for: characteristic)
-            guard let value = String(data: data, encoding: .utf8) else {
-                throw TopdonAppError.invalidCharacteristicValue(.serialNumberString)
-            }
-            deviceInformationService.characteristics.append(
-                CharacteristicItem(
-                    id: BluetoothUUID.serialNumberString.rawValue,
-                    name: "Serial Number",
-                    value: value
-                )
-            )
-        }
-        if let characteristic = connection.cache.characteristic(.firmwareRevisionString, service: .deviceInformation) {
-            let data = try await connection.central.readValue(for: characteristic)
-            guard let value = String(data: data, encoding: .utf8) else {
-                throw TopdonAppError.invalidCharacteristicValue(.firmwareRevisionString)
-            }
-            deviceInformationService.characteristics.append(
-                CharacteristicItem(
-                    id: BluetoothUUID.firmwareRevisionString.rawValue,
-                    name: "Firmware Revision",
-                    value: value
-                )
-            )
-        }
-        if let characteristic = connection.cache.characteristic(.hardwareRevisionString, service: .deviceInformation) {
-            let data = try await connection.central.readValue(for: characteristic)
-            guard let value = String(data: data, encoding: .utf8) else {
-                throw TopdonAppError.invalidCharacteristicValue(.hardwareRevisionString)
-            }
-            deviceInformationService.characteristics.append(
-                CharacteristicItem(
-                    id: BluetoothUUID.hardwareRevisionString.rawValue,
-                    name: "Hardware Revision",
-                    value: value
-                )
-            )
-        }
-        if let characteristic = connection.cache.characteristic(.softwareRevisionString, service: .deviceInformation) {
-            let data = try await connection.central.readValue(for: characteristic)
-            guard let value = String(data: data, encoding: .utf8) else {
-                throw TopdonAppError.invalidCharacteristicValue(.softwareRevisionString)
-            }
-            deviceInformationService.characteristics.append(
-                CharacteristicItem(
-                    id: BluetoothUUID.softwareRevisionString.rawValue,
-                    name: "Software Revision",
-                    value: value
-                )
-            )
-        }
-        
-        // set services
-        self.services = [
-            thermometerService,
-            batteryService,
-            deviceInformationService
-        ]
-        .filter { $0.characteristics.isEmpty == false }
-    }
-}
+// MARK: - Preview
 
-extension TopdonDetailView {
-    
-    struct StateView: View {
-        
-        let product: ProductID
-        
-        let address: BluetoothAddress?
-        
-        let version: UInt8
-        
-        let capability: Topdon.Capability
-        
-        let ioCapability: Topdon.Capability.IO
-        
-        let services: [ServiceSection]
-        
-        var body: some View {
-            List {
-                Section("Advertisement") {
-                    if let address = self.address {
-                        SubtitleRow(
-                            title: Text("Address"),
-                            subtitle: Text(verbatim: address.rawValue)
-                        )
-                    }
-                    SubtitleRow(
-                        title: Text("Version"),
-                        subtitle: Text(verbatim: version.description)
-                    )
-                    #if DEBUG
-                    if capability.isEmpty == false {
-                        SubtitleRow(
-                            title: Text("Capability"),
-                            subtitle: Text(verbatim: capability.description)
-                        )
-                    }
-                    if ioCapability.isEmpty == false {
-                        SubtitleRow(
-                            title: Text("IO Capability"),
-                            subtitle: Text(verbatim: ioCapability.description)
-                        )
-                    }
-                    #endif
-                }
-                ForEach(services) { service in
-                    Section(service.name) {
-                        ForEach(service.characteristics) { characteristic in
-                            SubtitleRow(
-                                title: Text(characteristic.name),
-                                subtitle: Text(verbatim: characteristic.value)
-                            )
-                        }
-                    }
-                }
-            }
-            .navigationTitle("\(product.description)")
-        }
-    }
-}
 
-extension TopdonDetailView {
-    
-    struct ServiceSection: Equatable, Identifiable {
-        
-        let id: BluetoothUUID
-        
-        let name: LocalizedStringKey
-        
-        var characteristics: [CharacteristicItem]
-    }
-    
-    struct CharacteristicItem: Equatable, Identifiable {
-        
-        let id: String
-        
-        let name: LocalizedStringKey
-        
-        let value: String
-    }
-}
-*/

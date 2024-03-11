@@ -15,7 +15,7 @@ struct TopdonAdvertisementRow: View {
     @EnvironmentObject
     private var store: AccessoryManager
     
-    let advertisement: TopdonAccessory.Advertisement
+    let advertisement: TopdonAccessory
     
     var body: some View {
         StateView(
@@ -29,7 +29,7 @@ internal extension TopdonAdvertisementRow {
     
     struct StateView: View {
         
-        let advertisement: TopdonAccessory.Advertisement
+        let advertisement: TopdonAccessory
         
         let information: TopdonAccessoryInfo?
         
@@ -48,8 +48,7 @@ internal extension TopdonAdvertisementRow {
                                 Image(systemName: information.symbol)
                             })
                     } else {
-                        ProgressView()
-                            .progressViewStyle(.circular)
+                        Image(systemName: "minus.plus.batteryblock")
                     }
                 }
                 .frame(width: 40)
@@ -67,18 +66,23 @@ internal extension TopdonAdvertisementRow {
         }
     }
 }
-/*
+
+// MARK: - Preview
+
 #if DEBUG
 struct TopdonAdvertisementRow_Previews: PreviewProvider {
+    
     static var previews: some View {
         NavigationView {
             List {
                 TopdonAdvertisementRow(
-                    TopdonAccessory.Advertisement.bt20(BT20.Advertisement)
+                    advertisement: .bt20(BT20(MockAdvertisementData.bt20)!)
+                )
+                TopdonAdvertisementRow(
+                    advertisement: .tb6000Pro(TB6000Pro(MockAdvertisementData.tb6000Pro)!)
                 )
             }
         }
     }
 }
 #endif
-*/
