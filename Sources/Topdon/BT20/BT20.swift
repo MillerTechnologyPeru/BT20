@@ -14,7 +14,9 @@ public enum BT20 {
     
     public struct Advertisement: Equatable, Hashable, Sendable {
         
-        public static var name: String { "BT20" }
+        public static var type: TopdonAccessory { .bt20 }
+        
+        public static var name: String { type.rawValue }
         
         public static var services: Set<BluetoothUUID> {
             [

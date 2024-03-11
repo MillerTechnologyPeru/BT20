@@ -6,6 +6,7 @@ import GATT
 public enum TopdonAccessory: String, Equatable, Hashable, Sendable, Codable {
     
     case bt20 = "BT20"
+    case tb6000Pro = "TB6000Pro"
 }
 
 public extension TopdonAccessory {
