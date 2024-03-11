@@ -49,7 +49,18 @@ final class TB6000ProTests: XCTestCase {
         XCTAssertEqual(advertisementData.localName, "TB6000Pro")
         XCTAssertNil(advertisementData.serviceUUIDs)
         XCTAssertEqual(advertisementData.manufacturerData, GATT.ManufacturerSpecificData(data: Data([0x56, 0x00, 0x78, 0x5E, 0xE8, 0x90, 0x5A, 0x42])))
-        //XCTAssertEqual(advertisementData.address.rawValue, "78:5E:E8:90:5A:42")
+        
+        guard let accessory = TopdonAccessory(advertisementData),
+            case let .tb6000Pro(advertisement) = accessory else {
+            XCTFail()
+            return
+        }
+        
+        XCTAssertEqual(accessory.type, .tb6000Pro)
+        XCTAssertEqual(accessory.name, "TB6000Pro")
+        XCTAssertEqual(accessory.address.rawValue, "78:5E:E8:90:5A:42")
+        XCTAssertEqual(type(of: advertisement).type, .tb6000Pro)
+        XCTAssertEqual(type(of: advertisement).name, "TB6000Pro")
     }
     #endif
     

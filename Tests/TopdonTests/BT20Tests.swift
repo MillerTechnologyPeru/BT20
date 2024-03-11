@@ -59,7 +59,7 @@ final class BT20Tests: XCTestCase {
         ])
         XCTAssertNil(advertisementData.manufacturerData)
         
-        guard let advertisement = BT20.Advertisement(advertisementData) else {
+        guard let advertisement = BT20(advertisementData) else {
             XCTFail()
             return
         }
