@@ -1,5 +1,5 @@
 //
-//  BatteryVoltageCommand.swift
+//  BT20BatteryVoltageCommand.swift
 //
 //
 //  Created by Alsey Coleman Miller on 3/10/24.
@@ -10,7 +10,7 @@ import Bluetooth
 
 public struct BatteryVoltageCommand: Equatable, Hashable, Codable, Sendable, BT20Message {
     
-    public static var opcode: TopdonSerialMessageOpcode { .batteryVoltageCommand }
+    public static var opcode: TopdonSerialMessageOpcode { .bt20BatteryVoltageCommand }
 
     internal let value0: UInt16
     

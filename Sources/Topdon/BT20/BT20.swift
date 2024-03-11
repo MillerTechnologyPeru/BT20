@@ -82,7 +82,7 @@ public extension BT20 {
     
     struct Command <T>: Equatable, Hashable, Encodable, Sendable, Telink.SerialPortProtocolCommand where T: Equatable, T: Hashable, T: Encodable, T: Sendable, T: BT20Message {
         
-        public static var type: SerialPortProtocolType { .topdonBM2 }
+        public static var type: SerialPortProtocolType { .topdon }
         
         public let opcode: TopdonSerialMessageOpcode
         
@@ -96,7 +96,7 @@ public extension BT20 {
     
     struct Event: Equatable, Hashable, Decodable, Sendable, Telink.SerialPortProtocolEvent {
         
-        public static var type: SerialPortProtocolType { .topdonBM2 }
+        public static var type: SerialPortProtocolType { .topdon }
         
         public let opcode: TopdonSerialMessageOpcode
         

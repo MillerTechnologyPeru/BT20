@@ -47,15 +47,13 @@ extension TopdonSerialMessageOpcode: CustomStringConvertible {
 
 public extension TopdonSerialMessageOpcode {
     
-    static var batteryVoltageCommand: TopdonSerialMessageOpcode { 0xFFF2DD02 }
+    static var bt20BatteryVoltageCommand: TopdonSerialMessageOpcode { 0xFFF2DD02 }
     
-    static var batteryVoltageNotification: TopdonSerialMessageOpcode { 0xFFF0DD03 }
+    static var bt20BatteryVoltageNotification: TopdonSerialMessageOpcode { 0xFFF0DD03 }
     
-    static var loggingIntervalCommand: TopdonSerialMessageOpcode { 0xFFF6DD0B }
+    static var bt20loggingIntervalCommand: TopdonSerialMessageOpcode { 0xFFF6DD0B }
+        
+    static var bt20VersionCommand: TopdonSerialMessageOpcode { 0xFFF8DD09 }
     
-    //static var confirmation: TopdonSerialMessageOpcode { 0xFFF7 }
-    
-    static var versionCommand: TopdonSerialMessageOpcode { 0xFFF8DD09 }
-    
-    
+    static var tb6000ProBatteryVoltageNotification: TopdonSerialMessageOpcode { 0xFFE5BF12 }
 }

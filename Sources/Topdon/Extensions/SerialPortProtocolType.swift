@@ -10,5 +10,5 @@ import Telink
 
 public extension SerialPortProtocolType {
     
-    static var topdonBM2: SerialPortProtocolType { 0x55AA }
+    static var topdon: SerialPortProtocolType { 0x55AA }
 }

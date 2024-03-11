@@ -88,7 +88,7 @@ final class BT20Tests: XCTestCase {
             
             let message = try SerialPortProtocolMessage(from: data)
             let event = try BT20.Event(from: message)
-            let notification = try event.decode(BatteryVoltageNotification.self)
+            let notification = try event.decode(BT20.BatteryVoltageNotification.self)
             
             XCTAssertEqual(notification.date.description, "2024-03-06 09:09:00 +0000")
             XCTAssertEqual(notification.voltage.rawValue, 12518)
@@ -100,7 +100,7 @@ final class BT20Tests: XCTestCase {
             
             let message = try SerialPortProtocolMessage(from: data)
             let event = try BT20.Event(from: message)
-            let notification = try event.decode(BatteryVoltageNotification.self)
+            let notification = try event.decode(BT20.BatteryVoltageNotification.self)
 
             XCTAssertEqual(notification.date.description, "2024-03-09 10:15:14 +0000")
             XCTAssertEqual(notification.voltage.rawValue, 12512)

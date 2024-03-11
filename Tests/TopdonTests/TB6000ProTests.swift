@@ -79,28 +79,17 @@ final class TB6000ProTests: XCTestCase {
     
     func testVoltageNotification() throws {
         
-        do {
-            let data = Data([0x55, 0xAA, 0x00, 0x0F, 0xFF, 0xF0, 0xDD, 0x03, 0x65, 0xE8, 0x32, 0xAC, 0x30, 0xE6, 0x00, 0x00, 0x1B])
-            
-            let message = try SerialPortProtocolMessage(from: data)
-            let event = try BT20.Event(from: message)
-            let notification = try event.decode(BatteryVoltageNotification.self)
-            
-            XCTAssertEqual(notification.date.description, "2024-03-06 09:09:00 +0000")
-            XCTAssertEqual(notification.voltage.rawValue, 12518)
-            XCTAssertEqual(notification.voltage.voltage, 12.518)
-        }
+        let data = Data(hexadecimal: "55AA001AFFE5BF1265EF40E301035A327E020A0000002C00000008BC")!
+        XCTAssertEqual(data.count, 28)
         
-        do {
-            let data = Data([0x55, 0xAA, 0x00, 0x0F, 0xFF, 0xF0, 0xDD, 0x03, 0x65, 0xEC, 0x36, 0xB2, 0x30, 0xE0, 0x00, 0x00, 0x03])
-            
-            let message = try SerialPortProtocolMessage(from: data)
-            let event = try BT20.Event(from: message)
-            let notification = try event.decode(BatteryVoltageNotification.self)
-
-            XCTAssertEqual(notification.date.description, "2024-03-09 10:15:14 +0000")
-            XCTAssertEqual(notification.voltage.rawValue, 12512)
-            XCTAssertEqual(notification.voltage.voltage, 12.512)
-        }
+        let message = try SerialPortProtocolMessage(from: data)
+        let event = try BT20.Event(from: message)
+        let notification = try event.decode(TB6000Pro.BatteryVoltageNotification.self)
+        
+        XCTAssertEqual(notification.date.description, "2024-03-11 17:35:31 +0000")
+        XCTAssertEqual(notification.voltage.voltage, 12.926)
+        XCTAssertEqual(notification.watts.watts, 6.6394)
+        XCTAssertEqual(notification.amperage.amperage, 0.522)
+        XCTAssertEqual(notification.voltage.voltage * notification.amperage.amperage, 6.747372)
     }
 }
