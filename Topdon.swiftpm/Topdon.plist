@@ -2,6 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>TB6000Pro</key>
+	<dict>
+		<key>symbol</key>
+		<string>minus.plus.batteryblock</string>
+		<key>image</key>
+		<string>https://web-file.topdon.com/topdon-web/product_mobile_cover_image/TB6000Pro%20300-300.png</string>
+		<key>manual</key>
+		<string>https://web-file.topdon.com/topdon-web/information_cover/TB6000Pro%20Accessories.jpg</string>
+		<key>website</key>
+		<string>https://www.topdon.com/products/TB6000Pro</string>
+	</dict>
 	<key>BT20</key>
 	<dict>
 		<key>symbol</key>
