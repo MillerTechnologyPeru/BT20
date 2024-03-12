@@ -9,7 +9,7 @@ import Foundation
 
 public extension BT20 {
     
-    struct BatteryVoltageNotification: Equatable, Hashable, Codable, Sendable, BT20Message {
+    struct BatteryVoltageNotification: Equatable, Hashable, Codable, Sendable, TopdonSerialMessage {
         
         public static var opcode: TopdonSerialMessageOpcode { .bt20BatteryVoltageNotification }
         

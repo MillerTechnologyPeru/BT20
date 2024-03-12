@@ -161,16 +161,16 @@ public extension AccessoryManager {
     /// Read BT20 Voltage measurements.
     func readBT20Voltage(
         for accessory: TopdonAccessory.ID
-    ) async throws -> AsyncIndefiniteStream<Topdon.BatteryVoltageNotification> {
+    ) async throws -> AsyncIndefiniteStream<Topdon.BT20.BatteryVoltageNotification> {
         let connection = try await connect(to: accessory)
         let notifications = try await connection.recieveBT20Events()
-        try await connection.sendBT20Command(BatteryVoltageCommand())
-        return AsyncIndefiniteStream<Topdon.BatteryVoltageNotification> { build in
+        try await connection.sendBT20Command(BT20.BatteryVoltageCommand())
+        return AsyncIndefiniteStream<Topdon.BT20.BatteryVoltageNotification> { build in
             for try await event in notifications {
                 self.log("\(event.opcode) \(event.payload.toHexadecimal())")
                 switch event.opcode {
-                case .batteryVoltageNotification:
-                    let batteryNotification = try event.decode(BatteryVoltageNotification.self)
+                case .bt20BatteryVoltageNotification:
+                    let batteryNotification = try event.decode(BT20.BatteryVoltageNotification.self)
                     build(batteryNotification)
                 default:
                     continue
@@ -182,21 +182,21 @@ public extension AccessoryManager {
 
 internal extension GATTConnection {
     
-    func sendBT20Command<T>(_ command: T) async throws where T: Equatable, T: Hashable, T: Encodable, T: Sendable, T: BT20Message {
+    func sendBT20Command<T>(_ command: T) async throws where T: Equatable, T: Hashable, T: Encodable, T: Sendable, T: TopdonSerialMessage {
         guard let characteristic = cache.characteristic(.telinkSerialPortProtocolCommand, service: .telinkSerialPortProtocolService) else {
             throw TopdonAppError.characteristicNotFound(.telinkSerialPortProtocolCommand)
         }
         try await central.sendSerialPortProtocol(
-            command: BT20.Command(command),
+            command: TopdonCommand(command),
             characteristic: characteristic
         )
     }
     
-    func recieveBT20Events() async throws -> AsyncIndefiniteStream<Topdon.BT20.Event> {
+    func recieveBT20Events() async throws -> AsyncIndefiniteStream<TopdonEvent> {
         guard let characteristic = cache.characteristic(.telinkSerialPortProtocolNotification, service: .telinkSerialPortProtocolService) else {
             throw TopdonAppError.characteristicNotFound(.telinkSerialPortProtocolNotification)
         }
-        return try await central.recieveSerialPortProtocol(Topdon.BT20.Event.self, characteristic: characteristic)
+        return try await central.recieveSerialPortProtocol(TopdonEvent.self, characteristic: characteristic)
     }
 }
 
@@ -204,7 +204,51 @@ internal extension GATTConnection {
 
 public extension AccessoryManager {
     
-    func readTB600ProVoltage() async throws {
+    /// Read TB6000Pro Voltage measurements.
+    func readTB600ProVoltage(
+        for accessory: TopdonAccessory.ID
+    ) async throws -> AsyncIndefiniteStream<Topdon.TB6000Pro.BatteryVoltageNotification> {
+        let connection = try await connect(to: accessory)
+        let notifications = try await connection.recieveTB600ProEvents()
+        try await connection.sendTB600ProCommand(TB6000Pro.QuickChargeCommand())
+        return AsyncIndefiniteStream<TB6000Pro.BatteryVoltageNotification> { build in
+            for try await event in notifications {
+                self.log("\(event.opcode) \(event.payload.toHexadecimal())")
+                switch event.opcode {
+                case .tb6000ProBatteryVoltageNotification:
+                    let batteryNotification = try event.decode(TB6000Pro.BatteryVoltageNotification.self)
+                    build(batteryNotification)
+                default:
+                    continue
+                }
+            }
+        }
+    }
+}
+
+internal extension GATTConnection {
+    
+    func sendTB600ProCommand<T>(_ command: T) async throws where T: Equatable, T: Hashable, T: Encodable, T: Sendable, T: TopdonSerialMessage {
         
+        guard let characteristic = cache.characteristic(.tb6000ProCharacteristic2, service: .tb6000ProService) else {
+            throw TopdonAppError.characteristicNotFound(.tb6000ProCharacteristic2)
+        }
+        let message = try SerialPortProtocolMessage(command: TopdonCommand(command))
+        let data = try message.encode()
+        try await central.writeValue(data, for: characteristic, withResponse: false)
+    }
+    
+    func recieveTB600ProEvents() async throws -> AsyncIndefiniteStream<TopdonEvent> {
+        guard let characteristic = cache.characteristic(.tb6000ProCharacteristic2, service: .tb6000ProService) else {
+            throw TopdonAppError.characteristicNotFound(.tb6000ProCharacteristic2)
+        }
+        let notifications = try await central.notify(for: characteristic)
+        return AsyncIndefiniteStream<TopdonEvent> { build in
+            for try await data in notifications {
+                let message = try SerialPortProtocolMessage(from: data)
+                let event = try TopdonEvent.init(from: message)
+                build(event)
+            }
+        }
     }
 }

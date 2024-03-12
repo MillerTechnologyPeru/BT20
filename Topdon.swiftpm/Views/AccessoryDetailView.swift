@@ -159,12 +159,16 @@ extension TopdonAccessoryDetailView {
                     switch accessory.type {
                     case .bt20:
                         NavigationLink(destination: {
-                            VoltageView(id: accessory.id)
+                            BT20VoltageView(id: accessory.id)
                         }, label: {
                             Text("Real-time Voltage")
                         })
                     case .tb6000Pro:
-                        EmptyView()
+                        NavigationLink(destination: {
+                            TB6000ProVoltageView(id: accessory.id)
+                        }, label: {
+                            Text("Real-time Voltage")
+                        })
                     }
                     
                     // Links

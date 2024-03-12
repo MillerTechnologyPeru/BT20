@@ -1,5 +1,5 @@
 //
-//  VoltageView.swift
+//  BT20VoltageView.swift
 //
 //
 //  Created by Alsey Coleman Miller on 3/7/24.
@@ -11,7 +11,7 @@ import Bluetooth
 import GATT
 import Topdon
 
-struct VoltageView: View {
+struct BT20VoltageView: View {
     
     let id: TopdonAccessory.ID
     
@@ -19,7 +19,7 @@ struct VoltageView: View {
     private var store: AccessoryManager
     
     @State
-    var values = [BatteryVoltageNotification]()
+    var values = [BT20.BatteryVoltageNotification]()
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -36,7 +36,7 @@ struct VoltageView: View {
         .navigationTitle("Voltage")
         .task {
             do {
-                let stream = try await store.readVoltage(for: id)
+                let stream = try await store.readBT20Voltage(for: id)
                 Task {
                     do {
                         for try await value in stream {

@@ -11,19 +11,13 @@ import GATT
 
 public extension TB6000Pro {
     
-    struct BatteryVoltageNotification: Equatable, Hashable, Sendable, Codable, BT20Message {
+    struct BatteryVoltageNotification: Equatable, Hashable, Sendable, Codable, TopdonSerialMessage {
         
         public static var opcode: TopdonSerialMessageOpcode { .tb6000ProBatteryVoltageNotification }
         
         public let timestamp: UInt32
         
-        public var watts: Energy {
-            Energy(rawValue: UInt32(bigEndian: UInt32(bytes: (0x00, watts0.bigEndian.bytes.0, watts0.bigEndian.bytes.1, watts1))))
-        }
-        
-        internal let watts0: UInt16
-        
-        internal let watts1: UInt8
+        public let watts: Energy
         
         public let voltage: Voltage
         
@@ -84,9 +78,9 @@ public extension TB6000Pro.BatteryVoltageNotification {
     
     struct Energy: RawRepresentable, Equatable, Hashable, Codable, Sendable {
                 
-        public let rawValue: UInt32
+        public let rawValue: UInt24
         
-        public init(rawValue: UInt32) {
+        public init(rawValue: UInt24) {
             self.rawValue = rawValue
         }
     }
@@ -95,14 +89,14 @@ public extension TB6000Pro.BatteryVoltageNotification {
 public extension TB6000Pro.BatteryVoltageNotification.Energy {
     
     var watts: Float {
-        Float(rawValue) / 1_0000
+        Float(UInt32(rawValue)) / 1_0000
     }
 }
 
 extension TB6000Pro.BatteryVoltageNotification.Energy: ExpressibleByIntegerLiteral {
     
     public init(integerLiteral value: UInt32) {
-        self.init(rawValue: value)
+        self.init(rawValue: UInt24(value))
     }
 }
 
