@@ -18,7 +18,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/PureSwift/Bluetooth.git",
-            .upToNextMajor(from: "6.0.0")
+            from: "6.0.0"
         ),
         .package(
             url: "https://github.com/PureSwift/GATT.git",
@@ -26,7 +26,7 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/MillerTechnologyPeru/Telink.git",
-            branch: "master"
+            from: "0.1.0"
         )
     ],
     targets: [
