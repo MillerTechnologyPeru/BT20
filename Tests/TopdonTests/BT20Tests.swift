@@ -73,8 +73,8 @@ final class BT20Tests: XCTestCase {
         let data = Data(hexadecimal: "55AA000DFFF2DD0265EC36A70001C6")!
         
         let message = try SerialPortProtocolMessage(
-            command: BT20.Command(
-                BatteryVoltageCommand()
+            command: TopdonCommand(
+                BT20.BatteryVoltageCommand()
             )
         )
         let encodedData = try message.encode()
@@ -87,7 +87,7 @@ final class BT20Tests: XCTestCase {
             let data = Data([0x55, 0xAA, 0x00, 0x0F, 0xFF, 0xF0, 0xDD, 0x03, 0x65, 0xE8, 0x32, 0xAC, 0x30, 0xE6, 0x00, 0x00, 0x1B])
             
             let message = try SerialPortProtocolMessage(from: data)
-            let event = try BT20.Event(from: message)
+            let event = try TopdonEvent(from: message)
             let notification = try event.decode(BT20.BatteryVoltageNotification.self)
             
             XCTAssertEqual(notification.date.description, "2024-03-06 09:09:00 +0000")
@@ -99,7 +99,7 @@ final class BT20Tests: XCTestCase {
             let data = Data([0x55, 0xAA, 0x00, 0x0F, 0xFF, 0xF0, 0xDD, 0x03, 0x65, 0xEC, 0x36, 0xB2, 0x30, 0xE0, 0x00, 0x00, 0x03])
             
             let message = try SerialPortProtocolMessage(from: data)
-            let event = try BT20.Event(from: message)
+            let event = try TopdonEvent(from: message)
             let notification = try event.decode(BT20.BatteryVoltageNotification.self)
 
             XCTAssertEqual(notification.date.description, "2024-03-09 10:15:14 +0000")

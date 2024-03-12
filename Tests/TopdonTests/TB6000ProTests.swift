@@ -64,13 +64,13 @@ final class TB6000ProTests: XCTestCase {
     }
     #endif
     
-    func testVoltageCommand() throws {
+    func testQuickChargeCommand() throws {
         
-        let data = Data(hexadecimal: "55AA000DFFF2DD0265EC36A70001C6")!
+        let data = Data(hexadecimal: "55AA0007FFF8BF11AE")!
         
         let message = try SerialPortProtocolMessage(
-            command: BT20.Command(
-                BatteryVoltageCommand()
+            command: TopdonCommand(
+                TB6000Pro.QuickChargeCommand()
             )
         )
         let encodedData = try message.encode()
@@ -83,7 +83,7 @@ final class TB6000ProTests: XCTestCase {
         XCTAssertEqual(data.count, 28)
         
         let message = try SerialPortProtocolMessage(from: data)
-        let event = try BT20.Event(from: message)
+        let event = try TopdonEvent(from: message)
         let notification = try event.decode(TB6000Pro.BatteryVoltageNotification.self)
         
         XCTAssertEqual(notification.date.description, "2024-03-11 17:35:31 +0000")
